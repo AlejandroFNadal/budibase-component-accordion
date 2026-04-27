@@ -1,16 +1,19 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, untrack } from "svelte";
   import "@spectrum-css/accordion";
 
-  export let label;
-  export let openDefault;
-  export let size;
-  export let width;
-
-  $: open = openDefault;
+  let { label, openDefault, size, width } = $props();
 
   const { styleable } = getContext("sdk");
   const component = getContext("component");
+
+  // Match the Svelte 4 `$: open = openDefault` behavior: re-sync when the
+  // setting changes, but allow the click handler to toggle it in between.
+  let open = $state(openDefault);
+  $effect(() => {
+    const next = openDefault;
+    untrack(() => { open = next; });
+  });
 </script>
 
 <div use:styleable={$component.styles}>
@@ -22,7 +25,7 @@
     >
       <h3 class="spectrum-Accordion-itemHeading">
         <button
-          on:click={() => (open = !open)}
+          onclick={() => (open = !open)}
           style:font-size={size}
           class="spectrum-Accordion-itemHeader"
           type="button"
